@@ -7,10 +7,10 @@ import at.fhv.sysarch.lab3.utils.VectorUtils;
 import com.hackoeur.jglm.Vec3;
 import javafx.scene.paint.Color;
 
-public class FlatShadingFilter extends AbstractPushFilter<ColoredFace, ColoredFace> {
+public class FlatShadingPushFilter extends AbstractPushFilter<ColoredFace, ColoredFace> {
     private final PipelineData pipelineData;
 
-    public FlatShadingFilter(PipelineData pipelineData) {
+    public FlatShadingPushFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
     }
     @Override

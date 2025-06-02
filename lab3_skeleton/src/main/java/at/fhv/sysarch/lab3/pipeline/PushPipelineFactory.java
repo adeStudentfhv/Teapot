@@ -5,12 +5,9 @@ import at.fhv.sysarch.lab3.obj.Face;
 import at.fhv.sysarch.lab3.obj.Model;
 import at.fhv.sysarch.lab3.pipeline.Filters.Push_Fil.*;
 import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.PushFilter;
-import at.fhv.sysarch.lab3.rendering.RenderingMode;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 import javafx.animation.AnimationTimer;
-
-import static at.fhv.sysarch.lab3.rendering.RenderingMode.*;
 
 public class PushPipelineFactory {
 
@@ -19,61 +16,65 @@ public class PushPipelineFactory {
         var model = pd.getModel();
         var gc = pd.getGraphicsContext();
 
-        ModelViewTransformFilter mvFilter = new ModelViewTransformFilter(pd, 0f);
+        ModelViewTransformPushFilter mvFilter = new ModelViewTransformPushFilter(pd, 0f);
 
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
         PushFilter<?> current = mvFilter;
 
         // TODO 2. perform backface culling in VIEW SPACE
-        BackfaceCullingFilter cullingFilter = new BackfaceCullingFilter();
+        BackfaceCullingPushFilter cullingFilter = new BackfaceCullingPushFilter();
         mvFilter.connectTo(cullingFilter);
         current = cullingFilter;
 
         // TODO 3. perform depth sorting in VIEW SPACE
+        DepthSortingFilter depthFilter = new DepthSortingFilter();
+        cullingFilter.connectTo(depthFilter);
+        current = depthFilter;
+
 
         // TODO 4. add coloring (space unimportant)
-        ColoringFilter coloringFilter = new ColoringFilter(pd);
-        current.connectTo(coloringFilter);
-        current = coloringFilter;
+        ColoringPushFilter coloringPushFilter = new ColoringPushFilter(pd);
+        current.connectTo(coloringPushFilter);
+        current = coloringPushFilter;
 
         // lighting can be switched on/off
         if (pd.isPerformLighting()) {
             // 4a. TODO perform lighting in VIEW SPACE
-            FlatShadingFilter shadingFilter = new FlatShadingFilter(pd);
-            coloringFilter.connectTo(shadingFilter);
+            FlatShadingPushFilter shadingFilter = new FlatShadingPushFilter(pd);
+            coloringPushFilter.connectTo(shadingFilter);
             current = shadingFilter;
             
             // 5. TODO perform projection transformation on VIEW SPACE coordinates
-            ProjectionTransformFilter projFilter = new ProjectionTransformFilter(pd);
+            ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
             current.connectTo(projFilter);
             current = projFilter;
         } else {
             // 5. TODO perform projection transformation
-            ProjectionTransformFilter projFilter = new ProjectionTransformFilter(pd);
-            coloringFilter.connectTo(projFilter);
+            ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
+            coloringPushFilter.connectTo(projFilter);
             current = projFilter;
         }
 
         // TODO 6. perform perspective division to screen coordinates
-        ScreenSpaceTransformFilter screenFilter = new ScreenSpaceTransformFilter(pd);
+        ScreenSpaceTransformPushFilter screenFilter = new ScreenSpaceTransformPushFilter(pd);
         current.connectTo(screenFilter);
         current = screenFilter;
 
         // TODO 7. feed into the sink (renderer)
         switch (pd.getRenderingMode()) {
             case POINT:
-                PointRenderFilter pointRender = new PointRenderFilter(gc);
+                PointRenderPushFilter pointRender = new PointRenderPushFilter(gc);
                 current.connectTo(pointRender);
                 break;
             case WIREFRAME:
-                WireframeRenderFilter wireframeRender = new WireframeRenderFilter(gc);
+                WireframeRenderPushFilter wireframeRender = new WireframeRenderPushFilter(gc);
                 current.connectTo(wireframeRender);
                 break;
             case FILLED:
                 if (pd.isPerformLighting()) {
-                    current.connectTo(new ShadedRenderFilter(gc));
+                    current.connectTo(new ShadedRenderPushFilter(gc));
                 } else {
-                    current.connectTo(new FilledRenderFilter(gc));
+                    current.connectTo(new FilledRenderPushFilter(gc));
                 }
                 break;
         }
@@ -109,6 +110,9 @@ public class PushPipelineFactory {
                 for (Face face : model.getFaces()) {
                     mvFilter.push(face);
                 }
+
+                depthFilter.flush(); // sortiert + rendert danach
+
             }
         };
     }

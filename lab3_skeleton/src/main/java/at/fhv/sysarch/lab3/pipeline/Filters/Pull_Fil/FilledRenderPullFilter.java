@@ -1,19 +1,23 @@
-package at.fhv.sysarch.lab3.pipeline.Filters.Push_Fil;
+package at.fhv.sysarch.lab3.pipeline.Filters.Pull_Fil;
 
 import at.fhv.sysarch.lab3.obj.ColoredFace;
-import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.AbstractPushFilter;
+import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.AbstractPullFilter;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class FilledRenderFilter extends AbstractPushFilter<ColoredFace, Void> {
+public class FilledRenderPullFilter extends AbstractPullFilter<ColoredFace, Void> {
+
     private final GraphicsContext graphicsContext;
 
-    public FilledRenderFilter(GraphicsContext graphicsContext) {
+    public FilledRenderPullFilter(GraphicsContext graphicsContext) {
         this.graphicsContext = graphicsContext;
     }
 
     @Override
-    public void push(ColoredFace coloredFace) {
+    public Void pull() {
+        ColoredFace coloredFace = source.pull();
+        if (coloredFace == null) return null;
+
         var face = coloredFace.getFace();
         Color color = coloredFace.getColor();
 
@@ -31,5 +35,7 @@ public class FilledRenderFilter extends AbstractPushFilter<ColoredFace, Void> {
         };
 
         graphicsContext.fillPolygon(xPoints, yPoints, 3);
+
+        return null;
     }
 }

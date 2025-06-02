@@ -7,11 +7,11 @@ import at.fhv.sysarch.lab3.pipeline.PipelineData;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 
-public class ModelViewTransformFilter extends AbstractPushFilter<Face, Face> {
+public class ModelViewTransformPushFilter extends AbstractPushFilter<Face, Face> {
     private final PipelineData pipelineData;
     private Mat4 transform;
 
-    public ModelViewTransformFilter(PipelineData pipelineData, float initialAngle) {
+    public ModelViewTransformPushFilter(PipelineData pipelineData, float initialAngle) {
         this.pipelineData = pipelineData;
         // setze initiale Transformationsmatrix
         Mat4 rotation = Matrices.rotate(initialAngle, pipelineData.getModelRotAxis());

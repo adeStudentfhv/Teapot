@@ -7,10 +7,10 @@ import at.fhv.sysarch.lab3.pipeline.PipelineData;
 import javafx.scene.paint.Color;
 
 
-public class ColoringFilter extends AbstractPushFilter<Face, ColoredFace> {
+public class ColoringPushFilter extends AbstractPushFilter<Face, ColoredFace> {
     private final PipelineData pipelineData;
 
-    public ColoringFilter(PipelineData pipelineData) {
+    public ColoringPushFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
     }
 

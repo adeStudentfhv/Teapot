@@ -1,22 +1,25 @@
-package at.fhv.sysarch.lab3.pipeline.Filters.Push_Fil;
+package at.fhv.sysarch.lab3.pipeline.Filters.Pull_Fil;
 
 import at.fhv.sysarch.lab3.obj.ColoredFace;
 import at.fhv.sysarch.lab3.obj.Face;
 import at.fhv.sysarch.lab3.obj.FaceTransformer;
-import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.AbstractPushFilter;
+import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.AbstractPullFilter;
 import at.fhv.sysarch.lab3.pipeline.PipelineData;
 import com.hackoeur.jglm.Mat4;
 
-public class ScreenSpaceTransformFilter extends AbstractPushFilter<ColoredFace, ColoredFace> {
+public class ScreenSpaceTransformPullFilter extends AbstractPullFilter<ColoredFace, ColoredFace> {
 
     private final PipelineData pipelineData;
 
-    public ScreenSpaceTransformFilter(PipelineData pipelineData) {
+    public ScreenSpaceTransformPullFilter(PipelineData pipelineData) {
         this.pipelineData = pipelineData;
     }
 
     @Override
-    public void push(ColoredFace coloredFace) {
+    public ColoredFace pull() {
+        ColoredFace coloredFace = source.pull();
+        if (coloredFace == null) return null;
+
         Face face = coloredFace.getFace();
         Mat4 viewport = pipelineData.getViewportTransform();
 
@@ -24,8 +27,6 @@ public class ScreenSpaceTransformFilter extends AbstractPushFilter<ColoredFace, 
         Face transformed = FaceTransformer.perspectiveDivideAndViewport(face, viewport);
 
         // Behalte die ursprüngliche Farbe
-        ColoredFace result = new ColoredFace(transformed, coloredFace.getColor());
-
-        successor.push(result);
+        return new ColoredFace(transformed, coloredFace.getColor());
     }
 }

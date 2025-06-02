@@ -2,36 +2,87 @@ package at.fhv.sysarch.lab3.pipeline;
 
 import at.fhv.sysarch.lab3.animation.AnimationRenderer;
 import at.fhv.sysarch.lab3.obj.Model;
+import at.fhv.sysarch.lab3.pipeline.Filters.Pull_Fil.*;
+import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.PullFilter;
+import at.fhv.sysarch.lab3.rendering.RenderingMode;
+import com.hackoeur.jglm.Mat4;
+import com.hackoeur.jglm.Matrices;
 import javafx.animation.AnimationTimer;
 
 public class PullPipelineFactory {
     public static AnimationTimer createPipeline(PipelineData pd) {
+        var model = pd.getModel();
+        var gc = pd.getGraphicsContext();
+
         // TODO: pull from the source (model)
+        ModelSourceFilter source = new ModelSourceFilter(model);
 
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
+        ModelViewTransformationPullFilter mvFilter = new ModelViewTransformationPullFilter(pd, 0f);
+        mvFilter.setSource(source);
+        PullFilter<?> current = mvFilter;
 
         // TODO 2. perform backface culling in VIEW SPACE
+        BackfaceCullingPullFilter cullingPullFilter = new BackfaceCullingPullFilter();
+        cullingPullFilter.setSource(current);
+        current = cullingPullFilter;
 
         // TODO 3. perform depth sorting in VIEW SPACE
 
         // TODO 4. add coloring (space unimportant)
+        ColoringPullFilter coloringPullFilter = new ColoringPullFilter(pd);
+        coloringPullFilter.setSource(current);
+        current = coloringPullFilter;
 
         // lighting can be switched on/off
         if (pd.isPerformLighting()) {
-            // 4a. TODO perform lighting in VIEW SPACE
-            
-            // 5. TODO perform projection transformation on VIEW SPACE coordinates
-        } else {
-            // 5. TODO perform projection transformation
+            FlatShadingPullFilter shadingFilter = new FlatShadingPullFilter(pd);
+            shadingFilter.setSource(current);
+            current = shadingFilter;
         }
+
+        ProjectionTransformPullFilter projectionFilter = new ProjectionTransformPullFilter(pd);
+        projectionFilter.setSource(current);
+        current = projectionFilter;
+
+        ScreenSpaceTransformPullFilter screenFilter = new ScreenSpaceTransformPullFilter(pd);
+        screenFilter.setSource(current);
+        current = screenFilter;
 
         // TODO 6. perform perspective division to screen coordinates
 
         // TODO 7. feed into the sink (renderer)
+        PullFilter<?> finalFilter;
+        RenderingMode mode = pd.getRenderingMode();
+        switch (mode) {
+            case POINT -> {
+                PointRenderPullFilter pointRender = new PointRenderPullFilter(gc);
+                pointRender.setSource(current);
+                finalFilter = pointRender;
+            }
+            case WIREFRAME -> {
+                WireframeRenderPullFilter wireframeRender = new WireframeRenderPullFilter(gc);
+                wireframeRender.setSource(current);
+                finalFilter = wireframeRender;
+            }
+            case FILLED -> {
+                if (pd.isPerformLighting()) {
+                    ShadedRenderPullFilter shadedRender = new ShadedRenderPullFilter(gc);
+                    shadedRender.setSource(current);
+                    finalFilter = shadedRender;
+                } else {
+                    FilledRenderPullFilter filledRender = new FilledRenderPullFilter(gc);
+                    filledRender.setSource(current);
+                    finalFilter = filledRender;
+                }
+            }
+            default -> throw new IllegalStateException("Unsupported rendering mode: " + mode);
+        }
 
         // returning an animation renderer which handles clearing of the
         // viewport and computation of the praction
         return new AnimationRenderer(pd) {
+            private float angle = 0f;
             // TODO rotation variable goes in here
 
             /** This method is called for every frame from the JavaFX Animation
@@ -41,15 +92,16 @@ public class PullPipelineFactory {
              */
             @Override
             protected void render(float fraction, Model model) {
-                // TODO compute rotation in radians
+                angle += fraction * Math.PI * 2;
 
-                // TODO create new model rotation matrix using pd.getModelRotAxis and Matrices.rotate
+                Mat4 rotation = Matrices.rotate(angle, pd.getModelRotAxis());
+                Mat4 modelView = pd.getViewTransform().multiply(rotation.multiply(pd.getModelTranslation()));
 
-                // TODO compute updated model-view tranformation
+                mvFilter.setModelViewMatrix(modelView);
 
-                // TODO update model-view filter
-
-                // TODO trigger rendering of the pipeline
+                while (finalFilter.pull() != null) {
+                    // rendering geschieht im Sink-Filter
+                }
             }
         };
     }

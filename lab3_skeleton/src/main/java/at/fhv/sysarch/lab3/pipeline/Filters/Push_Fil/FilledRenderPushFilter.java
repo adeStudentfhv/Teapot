@@ -5,12 +5,13 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.AbstractPushFilter;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class ShadedRenderFilter extends AbstractPushFilter<ColoredFace, Void> {
+public class FilledRenderPushFilter extends AbstractPushFilter<ColoredFace, Void> {
     private final GraphicsContext graphicsContext;
 
-    public ShadedRenderFilter(GraphicsContext graphicsContext) {
+    public FilledRenderPushFilter(GraphicsContext graphicsContext) {
         this.graphicsContext = graphicsContext;
     }
+
     @Override
     public void push(ColoredFace coloredFace) {
         var face = coloredFace.getFace();

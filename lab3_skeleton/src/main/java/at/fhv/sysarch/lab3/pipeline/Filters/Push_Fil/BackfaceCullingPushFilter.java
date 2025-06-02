@@ -5,7 +5,7 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.AbstractPushFilter;
 import at.fhv.sysarch.lab3.utils.VectorUtils;
 import com.hackoeur.jglm.Vec3;
 
-public class BackfaceCullingFilter extends AbstractPushFilter<Face, Face> {
+public class BackfaceCullingPushFilter extends AbstractPushFilter<Face, Face> {
     @Override
     public void push(Face face) {
         Vec3 v1 = face.getV1().toVec3();

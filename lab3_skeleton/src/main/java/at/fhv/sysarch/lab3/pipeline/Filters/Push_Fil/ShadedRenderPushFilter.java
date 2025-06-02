@@ -5,19 +5,18 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Push_Int.AbstractPushFilter;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class WireframeRenderFilter extends AbstractPushFilter<ColoredFace, Void> {
+public class ShadedRenderPushFilter extends AbstractPushFilter<ColoredFace, Void> {
     private final GraphicsContext graphicsContext;
 
-    public WireframeRenderFilter(GraphicsContext graphicsContext) {
+    public ShadedRenderPushFilter(GraphicsContext graphicsContext) {
         this.graphicsContext = graphicsContext;
     }
-
     @Override
     public void push(ColoredFace coloredFace) {
         var face = coloredFace.getFace();
         Color color = coloredFace.getColor();
 
-        graphicsContext.setStroke(color);
+        graphicsContext.setFill(color);
 
         double[] xPoints = new double[] {
                 face.getV1().getX(),
@@ -30,6 +29,6 @@ public class WireframeRenderFilter extends AbstractPushFilter<ColoredFace, Void>
                 face.getV3().getY()
         };
 
-        graphicsContext.strokePolygon(xPoints, yPoints, 3);
+        graphicsContext.fillPolygon(xPoints, yPoints, 3);
     }
 }
