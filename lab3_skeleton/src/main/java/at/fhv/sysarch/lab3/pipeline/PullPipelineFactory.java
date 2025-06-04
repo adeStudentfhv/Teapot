@@ -18,6 +18,7 @@ public class PullPipelineFactory {
         // TODO: pull from the source (model)
         ModelSourceFilter source = new ModelSourceFilter(model);
 
+
         // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
         ModelViewTransformationPullFilter mvFilter = new ModelViewTransformationPullFilter(pd, 0f);
         mvFilter.setSource(source);
