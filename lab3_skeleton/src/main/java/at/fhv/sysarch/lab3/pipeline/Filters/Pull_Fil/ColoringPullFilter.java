@@ -15,6 +15,7 @@ public class ColoringPullFilter extends AbstractPullFilter<Face, ColoredFace> {
 
     @Override
     public ColoredFace pull() {
+        System.out.println(">> [FilterName] pulling");
         Face face = source.pull();
         if (face == null) return null;
 

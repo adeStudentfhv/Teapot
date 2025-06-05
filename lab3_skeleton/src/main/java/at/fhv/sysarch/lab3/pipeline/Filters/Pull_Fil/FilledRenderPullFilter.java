@@ -15,6 +15,8 @@ public class FilledRenderPullFilter extends AbstractPullFilter<ColoredFace, Void
 
     @Override
     public Void pull() {
+        System.out.println(">> [FilterName] pulling");
+
         ColoredFace coloredFace = source.pull();
         if (coloredFace == null) return null;
 

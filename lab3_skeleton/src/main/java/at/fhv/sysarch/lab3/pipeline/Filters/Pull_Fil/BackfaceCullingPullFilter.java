@@ -13,14 +13,22 @@ public class BackfaceCullingPullFilter extends AbstractPullFilter<Face, Face> {
             if (face == null) return null;
 
             Vec3 v1 = face.getV1().toVec3();
+            Vec3 v2 = face.getV2().toVec3();
+            Vec3 v3 = face.getV3().toVec3();
+
             Vec3 normal = VectorUtils.normalize(face.getN1().toVec3());
             Vec3 viewVector = VectorUtils.normalize(v1.getNegated());
 
             float dot = normal.dot(viewVector);
 
+            // Debug-Ausgabe optional
+            // System.out.println("CULL dot: " + dot);
+
             if (dot > 0f) {
-                return face; // Sichtbare Fläche → weiterverarbeiten
+                return face; // nur sichtbare Flächen weiterreichen
             }
+
+            // sonst: weiterziehen
         }
     }
 }

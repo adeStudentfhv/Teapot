@@ -12,108 +12,81 @@ import javafx.animation.AnimationTimer;
 public class PushPipelineFactory {
 
     public static AnimationTimer createPipeline(PipelineData pd) {
-        // TODO: push from the source (model)
         var model = pd.getModel();
         var gc = pd.getGraphicsContext();
 
+        // 1. Model-View Transformation
         ModelViewTransformPushFilter mvFilter = new ModelViewTransformPushFilter(pd, 0f);
 
-        // TODO 1. perform model-view transformation from model to VIEW SPACE coordinates
-        PushFilter<?> current = mvFilter;
-
-        // TODO 2. perform backface culling in VIEW SPACE
+        // 2. Backface Culling
         BackfaceCullingPushFilter cullingFilter = new BackfaceCullingPushFilter();
         mvFilter.connectTo(cullingFilter);
-        current = cullingFilter;
 
-        // TODO 3. perform depth sorting in VIEW SPACE
-        DepthSortingFilter depthFilter = new DepthSortingFilter();
-        cullingFilter.connectTo(depthFilter);
-        current = depthFilter;
+        // 3. Depth Sorting (jetzt VOR Coloring!)
+        DepthSortingPushFilter sortingFilter = new DepthSortingPushFilter(pd.getViewingEye());
+        cullingFilter.connectTo(sortingFilter);
 
+        // 4. Coloring (Face → ColoredFace)
+        ColoringPushFilter coloringFilter = new ColoringPushFilter(pd);
+        sortingFilter.connectTo(coloringFilter);
 
-        // TODO 4. add coloring (space unimportant)
-        ColoringPushFilter coloringPushFilter = new ColoringPushFilter(pd);
-        current.connectTo(coloringPushFilter);
-        current = coloringPushFilter;
-
-        // lighting can be switched on/off
+        // 5. Optional Lighting (FlatShading im View Space)
+        PushFilter<?> current;
         if (pd.isPerformLighting()) {
-            // 4a. TODO perform lighting in VIEW SPACE
-            FlatShadingPushFilter shadingFilter = new FlatShadingPushFilter(pd);
-            coloringPushFilter.connectTo(shadingFilter);
-            current = shadingFilter;
-            
-            // 5. TODO perform projection transformation on VIEW SPACE coordinates
-            ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
-            current.connectTo(projFilter);
-            current = projFilter;
+            FlatShadingPushFilter lightingFilter = new FlatShadingPushFilter(pd);
+            coloringFilter.connectTo(lightingFilter);
+            current = lightingFilter;
         } else {
-            // 5. TODO perform projection transformation
-            ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
-            coloringPushFilter.connectTo(projFilter);
-            current = projFilter;
+            current = coloringFilter;
         }
 
-        // TODO 6. perform perspective division to screen coordinates
+        // 6. Projection
+        ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
+        current.connectTo(projFilter);
+
+        // 7. Screen Space Transformation
         ScreenSpaceTransformPushFilter screenFilter = new ScreenSpaceTransformPushFilter(pd);
-        current.connectTo(screenFilter);
-        current = screenFilter;
+        projFilter.connectTo(screenFilter);
 
-        // TODO 7. feed into the sink (renderer)
+        // 8. Rendering (Sink)
         switch (pd.getRenderingMode()) {
-            case POINT:
-                PointRenderPushFilter pointRender = new PointRenderPushFilter(gc);
-                current.connectTo(pointRender);
-                break;
-            case WIREFRAME:
-                WireframeRenderPushFilter wireframeRender = new WireframeRenderPushFilter(gc);
-                current.connectTo(wireframeRender);
-                break;
-            case FILLED:
+            case POINT -> {
+                PointRenderPushFilter renderer = new PointRenderPushFilter(gc);
+                screenFilter.connectTo(renderer);
+            }
+            case WIREFRAME -> {
+                WireframeRenderPushFilter renderer = new WireframeRenderPushFilter(gc);
+                screenFilter.connectTo(renderer);
+            }
+            case FILLED -> {
                 if (pd.isPerformLighting()) {
-                    current.connectTo(new ShadedRenderPushFilter(gc));
+                    screenFilter.connectTo(new ShadedRenderPushFilter(gc));
                 } else {
-                    current.connectTo(new FilledRenderPushFilter(gc));
+                    screenFilter.connectTo(new FilledRenderPushFilter(gc));
                 }
-                break;
+            }
         }
 
-        // returning an animation renderer which handles clearing of the
-        // viewport and computation of the praction
-
+        // 9. Rückgabe des AnimationTimer mit Rotation und Flush
         return new AnimationRenderer(pd) {
             private float angle = 0f;
-            // TODO rotation variable goes in here
 
-            /** This method is called for every frame from the JavaFX Animation
-             * system (using an AnimationTimer, see AnimationRenderer). 
-             * @param fraction the time which has passed since the last render call in a fraction of a second
-             * @param model    the model to render 
-             */
             @Override
             protected void render(float fraction, Model model) {
+                gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
 
-                // TODO compute rotation in radians
-                angle += fraction * Math.PI * 2;
-
-                // TODO create new model rotation matrix using pd.modelRotAxis
+                angle += (fraction * Math.PI * 2) / 10;
                 Mat4 rotation = Matrices.rotate(angle, pd.getModelRotAxis());
-
-                // TODO compute updated model-view tranformation
                 Mat4 modelView = pd.getViewTransform().multiply(rotation.multiply(pd.getModelTranslation()));
-
-                // TODO update model-view filter
                 mvFilter.setTransform(modelView);
 
-                // TODO trigger rendering of the pipeline
                 for (Face face : model.getFaces()) {
                     mvFilter.push(face);
                 }
 
-                depthFilter.flush(); // sortiert + rendert danach
-
+                sortingFilter.flush(); // Wichtig: Sortierung ausführen!
             }
         };
     }
+
 }

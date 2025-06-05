@@ -8,16 +8,15 @@ import javafx.scene.paint.Color;
 
 
 public class ColoringPushFilter extends AbstractPushFilter<Face, ColoredFace> {
-    private final PipelineData pipelineData;
+    private final Color color;
 
     public ColoringPushFilter(PipelineData pipelineData) {
-        this.pipelineData = pipelineData;
+        this.color = pipelineData.getModelColor();
     }
 
     @Override
     public void push(Face face) {
-        Color color = pipelineData.getModelColor();
-        ColoredFace coloredFace = new ColoredFace(face, color);
-        successor.push(coloredFace);
+        ColoredFace colored = new ColoredFace(face, color);
+        successor.push(colored);  // keine Nebenwirkungen!
     }
 }

@@ -16,6 +16,8 @@ public class ProjectionTransformPullFilter extends AbstractPullFilter<ColoredFac
 
     @Override
     public ColoredFace pull() {
+        System.out.println(">> [FilterName] pulling");
+
         ColoredFace coloredFace = source.pull();
         if (coloredFace == null) return null;
 

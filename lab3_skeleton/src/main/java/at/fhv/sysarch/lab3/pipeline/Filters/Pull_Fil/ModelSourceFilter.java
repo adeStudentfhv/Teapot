@@ -7,14 +7,15 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.PullFilter;
 import java.util.Iterator;
 
 public class ModelSourceFilter implements PullFilter<Face> {
-    private final Iterator<Face> faceIterator;
+    private Iterator<Face> faceIterator;
 
-    public ModelSourceFilter(Model model) {
+    public void setModel(Model model) {
         this.faceIterator = model.getFaces().iterator();
     }
+
     @Override
     public Face pull() {
-        if (faceIterator.hasNext()) {
+        if (faceIterator != null && faceIterator.hasNext()) {
             return faceIterator.next();
         }
         return null;
@@ -22,6 +23,6 @@ public class ModelSourceFilter implements PullFilter<Face> {
 
     @Override
     public void setSource(PullFilter<?> source) {
-
+        // not needed for source
     }
 }

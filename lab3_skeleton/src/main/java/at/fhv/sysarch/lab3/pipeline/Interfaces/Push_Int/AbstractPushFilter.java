@@ -11,4 +11,3 @@ public abstract class AbstractPushFilter<I, O> implements PushFilter<I> {
     }
 }
 
-

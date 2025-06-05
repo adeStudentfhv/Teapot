@@ -12,7 +12,7 @@ public class VectorUtils {
 
     public static Vec4 perspectiveDivide(Vec4 vec) {
         float w = vec.getW();
-        if (w == 0f) return vec;
+        if (w == 0f) return vec;  // Sicherheitscheck
 
         return new Vec4(
                 vec.getX() / w,

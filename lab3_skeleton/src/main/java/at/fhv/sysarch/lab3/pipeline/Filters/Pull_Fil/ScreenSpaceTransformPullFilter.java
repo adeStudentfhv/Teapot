@@ -17,6 +17,8 @@ public class ScreenSpaceTransformPullFilter extends AbstractPullFilter<ColoredFa
 
     @Override
     public ColoredFace pull() {
+        System.out.println(">> [FilterName] pulling");
+
         ColoredFace coloredFace = source.pull();
         if (coloredFace == null) return null;
 
