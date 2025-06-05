@@ -7,97 +7,86 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.PullFilter;
 import com.hackoeur.jglm.Mat4;
 import com.hackoeur.jglm.Matrices;
 import javafx.animation.AnimationTimer;
+import javafx.scene.canvas.GraphicsContext;
 
 public class PullPipelineFactory {
-    public static AnimationTimer createPipeline(PipelineData pd) {
-        var model = pd.getModel();
-        var gc = pd.getGraphicsContext();
 
-        // 0. Source
+    public static AnimationTimer createPipeline(PipelineData pd) {
+        GraphicsContext gc = pd.getGraphicsContext();
+        Model model = pd.getModel();
+
         ModelSourceFilter source = new ModelSourceFilter();
         source.setModel(model);
 
-        // 1. Model-View-Transformation
-        ModelViewTransformationPullFilter mvTransform = new ModelViewTransformationPullFilter(pd, 0f);
+        ModelViewTransformPullFilter mvTransform = new ModelViewTransformPullFilter(pd, 0f);
         mvTransform.setSource(source);
 
-        // 2. Backface Culling
         BackfaceCullingPullFilter culling = new BackfaceCullingPullFilter();
         culling.setSource(mvTransform);
 
-
-        // 4. Coloring
-        ColoringPullFilter coloring = new ColoringPullFilter(pd);
-        coloring.setSource(culling);
-
-
-        // 4a. Lighting optional
-        FlatShadingPullFilter lighting = null;
+        PullFilter<?> colorStage;
         if (pd.isPerformLighting()) {
-            lighting = new FlatShadingPullFilter(pd);
-            lighting.setSource(coloring);
+            FlatShadingPullFilter shading = new FlatShadingPullFilter(pd);
+            shading.setSource(culling);
+            colorStage = shading;
+        } else {
+            ColoringPullFilter coloring = new ColoringPullFilter(pd);
+            coloring.setSource(culling);
+            colorStage = coloring;
         }
 
-        // 5. Projection
         ProjectionTransformPullFilter projection = new ProjectionTransformPullFilter(pd);
-        projection.setSource(pd.isPerformLighting() ? lighting : coloring);
+        projection.setSource(colorStage);
 
-        // 6. Screen Space
         ScreenSpaceTransformPullFilter screen = new ScreenSpaceTransformPullFilter(pd);
         screen.setSource(projection);
 
-        // 7. Renderer
-        PullFilter<?> finalFilter;
+        PullFilter<?> renderStage;
         switch (pd.getRenderingMode()) {
             case POINT -> {
-                PointRenderPullFilter renderer = new PointRenderPullFilter(gc);
+                PointRenderPullFilter renderer = new PointRenderPullFilter(pd);
                 renderer.setSource(screen);
-                finalFilter = renderer;
+                renderStage = renderer;
             }
             case WIREFRAME -> {
-                WireframeRenderPullFilter renderer = new WireframeRenderPullFilter(gc);
+                WireframeRenderPullFilter renderer = new WireframeRenderPullFilter(pd);
                 renderer.setSource(screen);
-                finalFilter = renderer;
+                renderStage = renderer;
             }
             case FILLED -> {
                 if (pd.isPerformLighting()) {
-                    ShadedRenderPullFilter renderer = new ShadedRenderPullFilter(gc);
+                    ShadedRenderPullFilter renderer = new ShadedRenderPullFilter(pd);
                     renderer.setSource(screen);
-                    finalFilter = renderer;
+                    renderStage = renderer;
                 } else {
-                    FilledRenderPullFilter renderer = new FilledRenderPullFilter(gc);
+                    FilledRenderPullFilter renderer = new FilledRenderPullFilter(pd);
                     renderer.setSource(screen);
-                    finalFilter = renderer;
+                    renderStage = renderer;
                 }
             }
             default -> throw new IllegalStateException("Unsupported rendering mode: " + pd.getRenderingMode());
         }
 
-        // AnimationRenderer mit Rotation und Render-Trigger
-        return new AnimationRenderer(pd) {
+        SinkPullFilter sink = new SinkPullFilter();
+        sink.setSource(renderStage);
 
+        return new AnimationRenderer(pd) {
             private float angle = 0f;
 
             @Override
             protected void render(float fraction, Model model) {
                 gc.clearRect(0, 0, gc.getCanvas().getWidth(), gc.getCanvas().getHeight());
-                angle += fraction * Math.PI * 2;
+                angle += (fraction * Math.PI * 2) / 10;
 
                 Mat4 rotation = Matrices.rotate(angle, pd.getModelRotAxis());
-                Mat4 modelView = pd.getViewTransform().multiply(rotation.multiply(pd.getModelTranslation()));
+                Mat4 modelMatrix = rotation.multiply(pd.getModelTranslation());
+                Mat4 modelView = pd.getViewTransform().multiply(modelMatrix);
                 mvTransform.setModelViewMatrix(modelView);
 
-                System.out.println(">>> RENDER startet");
-
                 source.setModel(model);
-                System.out.println("Model gesetzt mit " + model.getFaces().size() + " Faces");
 
-                while (finalFilter.pull() != null) {
-                    // Rendering passiert im letzten Filter
-                }
+                sink.pull();
             }
-
-
         };
     }
 }

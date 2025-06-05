@@ -2,40 +2,34 @@ package at.fhv.sysarch.lab3.pipeline.Filters.Pull_Fil;
 
 import at.fhv.sysarch.lab3.obj.ColoredFace;
 import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.AbstractPullFilter;
+import at.fhv.sysarch.lab3.pipeline.PipelineData;
+import com.hackoeur.jglm.Vec2;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
 
-public class WireframeRenderPullFilter extends AbstractPullFilter<ColoredFace, Void> {
+public class WireframeRenderPullFilter extends AbstractPullFilter<ColoredFace, ColoredFace> {
+    private final GraphicsContext gc;
 
-    private final GraphicsContext graphicsContext;
-
-    public WireframeRenderPullFilter(GraphicsContext graphicsContext) {
-        this.graphicsContext = graphicsContext;
+    public WireframeRenderPullFilter(PipelineData pipelineData) {
+        this.gc = pipelineData.getGraphicsContext();
     }
 
     @Override
-    public Void pull() {
+    public ColoredFace pull() {
         ColoredFace coloredFace = source.pull();
         if (coloredFace == null) return null;
 
-        var face = coloredFace.getFace();
-        Color color = coloredFace.getColor();
+        gc.setStroke(coloredFace.getColor());
 
-        graphicsContext.setStroke(color);
+        Vec2 v1 = coloredFace.getFace().getV1().toScreen();
+        Vec2 v2 = coloredFace.getFace().getV2().toScreen();
+        Vec2 v3 = coloredFace.getFace().getV3().toScreen();
 
-        double[] xPoints = new double[] {
-                face.getV1().getX(),
-                face.getV2().getX(),
-                face.getV3().getX()
-        };
-        double[] yPoints = new double[] {
-                face.getV1().getY(),
-                face.getV2().getY(),
-                face.getV3().getY()
-        };
+        gc.strokePolygon(
+                new double[]{v1.getX(), v2.getX(), v3.getX()},
+                new double[]{v1.getY(), v2.getY(), v3.getY()},
+                3
+        );
 
-        graphicsContext.strokePolygon(xPoints, yPoints, 3);
-
-        return null;
+        return coloredFace;
     }
 }

@@ -13,7 +13,7 @@ public class ModelViewTransformPushFilter extends AbstractPushFilter<Face, Face>
 
     public ModelViewTransformPushFilter(PipelineData pipelineData, float initialAngle) {
         this.pipelineData = pipelineData;
-        // setze initiale Transformationsmatrix
+
         Mat4 rotation = Matrices.rotate(initialAngle, pipelineData.getModelRotAxis());
         this.transform = pipelineData.getViewTransform()
                 .multiply(rotation.multiply(pipelineData.getModelTranslation()));

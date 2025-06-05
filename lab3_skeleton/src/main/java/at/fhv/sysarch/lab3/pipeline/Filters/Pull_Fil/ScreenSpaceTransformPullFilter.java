@@ -17,18 +17,14 @@ public class ScreenSpaceTransformPullFilter extends AbstractPullFilter<ColoredFa
 
     @Override
     public ColoredFace pull() {
-        System.out.println(">> [FilterName] pulling");
-
         ColoredFace coloredFace = source.pull();
         if (coloredFace == null) return null;
 
         Face face = coloredFace.getFace();
         Mat4 viewport = pipelineData.getViewportTransform();
 
-        // Wende perspektivische Division + Viewport-Transformation an
         Face transformed = FaceTransformer.perspectiveDivideAndViewport(face, viewport);
 
-        // Behalte die ursprüngliche Farbe
         return new ColoredFace(transformed, coloredFace.getColor());
     }
 }

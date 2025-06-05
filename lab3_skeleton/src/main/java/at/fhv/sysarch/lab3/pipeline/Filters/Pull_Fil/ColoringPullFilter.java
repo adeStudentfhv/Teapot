@@ -7,19 +7,17 @@ import at.fhv.sysarch.lab3.pipeline.PipelineData;
 import javafx.scene.paint.Color;
 
 public class ColoringPullFilter extends AbstractPullFilter<Face, ColoredFace> {
-    private final PipelineData pipelineData;
+    private final Color color;
 
     public ColoringPullFilter(PipelineData pipelineData) {
-        this.pipelineData = pipelineData;
+        this.color = pipelineData.getModelColor();
     }
 
     @Override
     public ColoredFace pull() {
-        System.out.println(">> [FilterName] pulling");
         Face face = source.pull();
         if (face == null) return null;
 
-        Color color = pipelineData.getModelColor();
         return new ColoredFace(face, color);
     }
 }

@@ -20,10 +20,8 @@ public class ScreenSpaceTransformPushFilter extends AbstractPushFilter<ColoredFa
         Face face = coloredFace.getFace();
         Mat4 viewport = pipelineData.getViewportTransform();
 
-        // Wende perspektivische Division + Viewport-Transformation an
         Face transformed = FaceTransformer.perspectiveDivideAndViewport(face, viewport);
 
-        // Behalte die ursprüngliche Farbe
         ColoredFace result = new ColoredFace(transformed, coloredFace.getColor());
 
         successor.push(result);

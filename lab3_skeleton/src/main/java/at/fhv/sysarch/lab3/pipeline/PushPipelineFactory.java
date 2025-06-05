@@ -15,22 +15,17 @@ public class PushPipelineFactory {
         var model = pd.getModel();
         var gc = pd.getGraphicsContext();
 
-        // 1. Model-View Transformation
         ModelViewTransformPushFilter mvFilter = new ModelViewTransformPushFilter(pd, 0f);
 
-        // 2. Backface Culling
         BackfaceCullingPushFilter cullingFilter = new BackfaceCullingPushFilter();
         mvFilter.connectTo(cullingFilter);
 
-        // 3. Depth Sorting (jetzt VOR Coloring!)
         DepthSortingPushFilter sortingFilter = new DepthSortingPushFilter(pd.getViewingEye());
         cullingFilter.connectTo(sortingFilter);
 
-        // 4. Coloring (Face → ColoredFace)
         ColoringPushFilter coloringFilter = new ColoringPushFilter(pd);
         sortingFilter.connectTo(coloringFilter);
 
-        // 5. Optional Lighting (FlatShading im View Space)
         PushFilter<?> current;
         if (pd.isPerformLighting()) {
             FlatShadingPushFilter lightingFilter = new FlatShadingPushFilter(pd);
@@ -40,15 +35,12 @@ public class PushPipelineFactory {
             current = coloringFilter;
         }
 
-        // 6. Projection
         ProjectionTransformPushFilter projFilter = new ProjectionTransformPushFilter(pd);
         current.connectTo(projFilter);
 
-        // 7. Screen Space Transformation
         ScreenSpaceTransformPushFilter screenFilter = new ScreenSpaceTransformPushFilter(pd);
         projFilter.connectTo(screenFilter);
 
-        // 8. Rendering (Sink)
         switch (pd.getRenderingMode()) {
             case POINT -> {
                 PointRenderPushFilter renderer = new PointRenderPushFilter(gc);
@@ -67,7 +59,6 @@ public class PushPipelineFactory {
             }
         }
 
-        // 9. Rückgabe des AnimationTimer mit Rotation und Flush
         return new AnimationRenderer(pd) {
             private float angle = 0f;
 
@@ -84,7 +75,7 @@ public class PushPipelineFactory {
                     mvFilter.push(face);
                 }
 
-                sortingFilter.flush(); // Wichtig: Sortierung ausführen!
+                sortingFilter.flush();
             }
         };
     }

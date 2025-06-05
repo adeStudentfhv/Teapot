@@ -23,6 +23,5 @@ public class ModelSourceFilter implements PullFilter<Face> {
 
     @Override
     public void setSource(PullFilter<?> source) {
-        // not needed for source
     }
 }

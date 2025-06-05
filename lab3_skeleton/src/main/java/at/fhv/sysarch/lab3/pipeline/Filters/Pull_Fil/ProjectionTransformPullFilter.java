@@ -1,30 +1,26 @@
 package at.fhv.sysarch.lab3.pipeline.Filters.Pull_Fil;
 
 import at.fhv.sysarch.lab3.obj.ColoredFace;
-import at.fhv.sysarch.lab3.obj.Face;
 import at.fhv.sysarch.lab3.obj.FaceTransformer;
 import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.AbstractPullFilter;
 import at.fhv.sysarch.lab3.pipeline.PipelineData;
 import com.hackoeur.jglm.Mat4;
 
 public class ProjectionTransformPullFilter extends AbstractPullFilter<ColoredFace, ColoredFace> {
-    private final PipelineData pipelineData;
+    private final Mat4 projectionMatrix;
 
     public ProjectionTransformPullFilter(PipelineData pipelineData) {
-        this.pipelineData = pipelineData;
+        this.projectionMatrix = pipelineData.getProjTransform();
     }
 
     @Override
     public ColoredFace pull() {
-        System.out.println(">> [FilterName] pulling");
+        ColoredFace face = source.pull();
+        if (face == null) return null;
 
-        ColoredFace coloredFace = source.pull();
-        if (coloredFace == null) return null;
-
-        Face original = coloredFace.getFace();
-        Mat4 proj = pipelineData.getProjTransform();
-
-        Face projected = FaceTransformer.transform(original, proj);
-        return new ColoredFace(projected, coloredFace.getColor());
+        return new ColoredFace(
+                FaceTransformer.transform(face.getFace(), projectionMatrix),
+                face.getColor()
+        );
     }
 }

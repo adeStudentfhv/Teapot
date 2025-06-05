@@ -17,6 +17,6 @@ public class ColoringPushFilter extends AbstractPushFilter<Face, ColoredFace> {
     @Override
     public void push(Face face) {
         ColoredFace colored = new ColoredFace(face, color);
-        successor.push(colored);  // keine Nebenwirkungen!
+        successor.push(colored);
     }
 }

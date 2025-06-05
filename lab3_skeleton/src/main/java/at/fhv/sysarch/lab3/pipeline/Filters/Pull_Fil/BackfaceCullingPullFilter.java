@@ -5,6 +5,7 @@ import at.fhv.sysarch.lab3.pipeline.Interfaces.Pull_Int.AbstractPullFilter;
 import at.fhv.sysarch.lab3.utils.VectorUtils;
 import com.hackoeur.jglm.Vec3;
 
+
 public class BackfaceCullingPullFilter extends AbstractPullFilter<Face, Face> {
     @Override
     public Face pull() {
@@ -21,14 +22,9 @@ public class BackfaceCullingPullFilter extends AbstractPullFilter<Face, Face> {
 
             float dot = normal.dot(viewVector);
 
-            // Debug-Ausgabe optional
-            // System.out.println("CULL dot: " + dot);
-
             if (dot > 0f) {
-                return face; // nur sichtbare Flächen weiterreichen
+                return face;
             }
-
-            // sonst: weiterziehen
         }
     }
 }

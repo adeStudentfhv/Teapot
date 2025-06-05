@@ -15,14 +15,14 @@ public class FlatShadingPushFilter extends AbstractPushFilter<ColoredFace, Color
     }
     @Override
     public void push(ColoredFace face) {
-        Vec3 lightPos = pipelineData.getLightPos(); // Position der Lichtquelle im View Space
-        Vec3 faceCenter = computeFaceCenter(face); // Mittelpunkt des Dreiecks
-        Vec3 toLight = VectorUtils.normalize(lightPos.subtract(faceCenter)); // Richtung zum Licht
+        Vec3 lightPos = pipelineData.getLightPos();
+        Vec3 faceCenter = computeFaceCenter(face);
+        Vec3 toLight = VectorUtils.normalize(lightPos.subtract(faceCenter));
 
         Vec3 faceNormal = VectorUtils.normalize(face.getFace().getN1().toVec3());
 
         float brightness = faceNormal.dot(toLight);
-        brightness = Math.max(brightness, 0f); // wenn negativ → 0
+        brightness = Math.max(brightness, 0f);
 
         Color original = face.getColor();
 

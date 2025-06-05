@@ -21,7 +21,6 @@ public class PointRenderPushFilter extends AbstractPushFilter<ColoredFace, Void>
 
         graphicsContext.setStroke(color);
 
-        // Alle drei Eckpunkte als kleine Linie darstellen (quasi Punkt)
         for (Vec4 v : new Vec4[] {
                 face.getV1(),
                 face.getV2(),
